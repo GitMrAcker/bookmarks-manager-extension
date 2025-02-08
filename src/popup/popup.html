@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Marcadores</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gestor de Marcadores</h1>
+            <p class="descripcion">Analiza y gestiona tus marcadores de Chrome</p>
+        </header>
+
+        <main>
+            <div class="acciones">
+                <button id="btnAnalizar" class="btn-principal">
+                    Analizar Marcadores
+                </button>
+            </div>
+
+            <div id="cargando" class="cargando oculto">
+                <div class="spinner"></div>
+                <span>Analizando marcadores...</span>
+            </div>
+
+            <div id="resultados" class="resultados oculto">
+                <!-- Los resultados se insertarán dinámicamente -->
+            </div>
+
+            <div id="error" class="error oculto">
+                <p class="mensaje-error"></p>
+                <button class="btn-reintentar">Reintentar</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+</html>
+

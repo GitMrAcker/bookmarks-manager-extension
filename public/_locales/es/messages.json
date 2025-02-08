@@ -1,0 +1,30 @@
+{
+    "extensionName": {
+      "message": "Gestor de Marcadores",
+      "description": "Nombre de la extensión"
+    },
+    "extensionDescription": {
+      "message": "Analiza y gestiona tus marcadores de Chrome de manera eficiente",
+      "description": "Descripción de la extensión"
+    },
+    "btnAnalizar": {
+      "message": "Analizar Marcadores",
+      "description": "Texto del botón de análisis"
+    },
+    "cargando": {
+      "message": "Analizando marcadores...",
+      "description": "Mensaje de carga"
+    },
+    "totalMarcadores": {
+      "message": "Total de marcadores: $COUNT$",
+      "description": "Total de marcadores encontrados",
+      "placeholders": {
+        "count": {
+          "content": "$1",
+          "example": "42"
+        }
+      }
+    }
+  }
+  
+  

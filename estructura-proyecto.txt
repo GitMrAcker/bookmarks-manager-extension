@@ -1,0 +1,50 @@
+extension-chrome/
+│
+├── src/
+│   ├── background/
+│   │   └── background.js      # Service worker y lógica en segundo plano
+│   │
+│   ├── popup/
+│   │   ├── popup.html        # Interfaz del popup
+│   │   ├── popup.js         # Lógica del popup
+│   │   └── popup.css        # Estilos del popup
+│   │
+│   ├── content/
+│   │   └── content.js       # Scripts que se inyectan en las páginas
+│   │
+│   ├── utils/
+│   │   ├── logger.js        # Utilidad para logging consistente
+│   │   ├── storage.js       # Manejo del almacenamiento
+│   ��   └── validators.js    # Validaciones comunes
+│   │
+│   └── config/
+│       └── constants.js     # Constantes y configuración
+│
+├── public/
+│   ├── icons/
+│   │   ├── icon16.png
+│   │   ├── icon48.png
+│   │   ├── icon128.png
+│   │   └── icon.svg
+│   │
+│   └── _locales/           # Internacionalización
+│       ├── es/
+│       │   └── messages.json
+│       └── en/
+│           └── messages.json
+│
+├── tests/                  # Pruebas unitarias y de integración
+│   ├── unit/
+│   │   └── validators.test.js
+│   └── integration/
+│       └── popup.test.js
+│
+├── docs/                   # Documentación
+│   ├── CONTRIBUTING.md
+│   └── SEGURIDAD.md
+│
+├── manifest.json           # Manifest V3
+├── README.md
+├── LICENSE
+└── .gitignore
+

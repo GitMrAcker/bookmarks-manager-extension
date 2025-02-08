@@ -1,0 +1,17 @@
+{
+  "name": "bookmarks-manager-extension",
+  "version": "1.0.0",
+  "description": "Extensión para gestionar marcadores de Chrome",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build step required\" && exit 0"
+  },
+  "keywords": ["chrome-extension", "bookmarks", "javascript"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.254"
+  }
+}
+
