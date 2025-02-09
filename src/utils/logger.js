@@ -1,53 +1,45 @@
-/**
- * Utilidad para logging consistente
- */
+// Logger utility class
+class Logger {
+  constructor(level = "info") {
+    this.level = level
 
-const NIVELES = {
-    INFO: "INFO",
-    WARN: "WARN",
-    ERROR: "ERROR",
-    DEBUG: "DEBUG",
+    // Bind methods to ensure correct 'this' context
+    this.log = this.log.bind(this)
+    this.debug = this.debug.bind(this)
+    this.info = this.info.bind(this)
+    this.warn = this.warn.bind(this)
+    this.error = this.error.bind(this)
   }
-  
-  class Logger {
-    constructor(contexto) {
-      this.contexto = contexto
-    }
-  
-    formatearMensaje(nivel, mensaje, datos = {}) {
-      const timestamp = new Date().toISOString()
-      return {
-        timestamp,
-        nivel,
-        contexto: this.contexto,
-        mensaje,
-        datos,
-      }
-    }
-  
-    info(mensaje, datos) {
-      const logFormateado = this.formatearMensaje(NIVELES.INFO, mensaje, datos)
-      console.log(`[${logFormateado.timestamp}] [${logFormateado.nivel}] ${mensaje}`, datos || "")
-    }
-  
-    error(mensaje, error, datos) {
-      const logFormateado = this.formatearMensaje(NIVELES.ERROR, mensaje, { error, ...datos })
-      console.error(`[${logFormateado.timestamp}] [${logFormateado.nivel}] ${mensaje}`, error, datos || "")
-    }
-  
-    warn(mensaje, datos) {
-      const logFormateado = this.formatearMensaje(NIVELES.WARN, mensaje, datos)
-      console.warn(`[${logFormateado.timestamp}] [${logFormateado.nivel}] ${mensaje}`, datos || "")
-    }
-  
-    debug(mensaje, datos) {
-      if (process.env.NODE_ENV === "development") {
-        const logFormateado = this.formatearMensaje(NIVELES.DEBUG, mensaje, datos)
-        console.debug(`[${logFormateado.timestamp}] [${logFormateado.nivel}] ${mensaje}`, datos || "")
-      }
+
+  log(message, level = "info") {
+    if (this.level === "debug" || level === "debug") {
+      console.debug(`[${level.toUpperCase()}] ${message}`)
+    } else if (this.level === "info" || level === "info") {
+      console.info(`[${level.toUpperCase()}] ${message}`)
+    } else if (this.level === "warn" || level === "warn") {
+      console.warn(`[${level.toUpperCase()}] ${message}`)
+    } else if (this.level === "error" || level === "error") {
+      console.error(`[${level.toUpperCase()}] ${message}`)
     }
   }
-  
-  export default Logger
-  
-  
+
+  debug(message) {
+    this.log(message, "debug")
+  }
+
+  info(message) {
+    this.log(message, "info")
+  }
+
+  warn(message) {
+    this.log(message, "warn")
+  }
+
+  error(message) {
+    this.log(message, "error")
+  }
+}
+
+// Make Logger available globally
+window.Logger = Logger
+

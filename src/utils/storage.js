@@ -1,73 +1,37 @@
-/**
- * Utilidad para manejar el almacenamiento de la extensión
- */
-
-import Logger from "./logger.js"
-import chrome from "chrome" // Added import for chrome
-
-const logger = new Logger("Storage")
-
-class Storage {
-  /**
-   * Guarda datos en el almacenamiento de Chrome
-   * @param {string} key - Clave para almacenar
-   * @param {any} value - Valor a almacenar
-   * @returns {Promise<void>}
-   */
-  static async guardar(key, value) {
+// Storage management utility
+const storage = {
+  getItem: (key) => {
     try {
-      await chrome.storage.local.set({ [key]: value })
-      logger.info(`Datos guardados correctamente: ${key}`)
+      const value = localStorage.getItem(key)
+      return value ? JSON.parse(value) : null
     } catch (error) {
-      logger.error(`Error al guardar datos: ${key}`, error)
-      throw error
+      console.error("Error getting item from storage:", error)
+      return null
     }
-  }
-
-  /**
-   * Obtiene datos del almacenamiento
-   * @param {string} key - Clave a recuperar
-   * @returns {Promise<any>}
-   */
-  static async obtener(key) {
+  },
+  setItem: (key, value) => {
     try {
-      const result = await chrome.storage.local.get(key)
-      return result[key]
+      localStorage.setItem(key, JSON.stringify(value))
     } catch (error) {
-      logger.error(`Error al obtener datos: ${key}`, error)
-      throw error
+      console.error("Error setting item in storage:", error)
     }
-  }
-
-  /**
-   * Elimina datos del almacenamiento
-   * @param {string} key - Clave a eliminar
-   * @returns {Promise<void>}
-   */
-  static async eliminar(key) {
+  },
+  removeItem: (key) => {
     try {
-      await chrome.storage.local.remove(key)
-      logger.info(`Datos eliminados correctamente: ${key}`)
+      localStorage.removeItem(key)
     } catch (error) {
-      logger.error(`Error al eliminar datos: ${key}`, error)
-      throw error
+      console.error("Error removing item from storage:", error)
     }
-  }
-
-  /**
-   * Limpia todo el almacenamiento
-   * @returns {Promise<void>}
-   */
-  static async limpiar() {
+  },
+  clear: () => {
     try {
-      await chrome.storage.local.clear()
-      logger.info("Almacenamiento limpiado correctamente")
+      localStorage.clear()
     } catch (error) {
-      logger.error("Error al limpiar el almacenamiento", error)
-      throw error
+      console.error("Error clearing storage:", error)
     }
-  }
+  },
 }
 
-export default Storage
+// Hacer disponible globalmente
+window.storage = storage
 

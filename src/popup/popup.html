@@ -3,40 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Marcadores</title>
+    <title>Bookmark Manager By MrAcker</title>
+    <!-- Estilos -->
+    <link rel="stylesheet" href="../assets/css/roboto.css">
+    <link rel="stylesheet" href="../assets/css/fontawesome.min.css">
     <link rel="stylesheet" href="popup.css">
+    <!-- Chart.js debe cargarse antes que popup.js -->
+    <script src="../assets/js/chart.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Gestor de Marcadores</h1>
-            <p class="descripcion">Analiza y gestiona tus marcadores de Chrome</p>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Bookmark Manager by MrAcker</h1>
+            <p class="subtitle">Analiza y gestiona tus marcadores de Chrome</p>
         </header>
 
-        <main>
-            <div class="acciones">
-                <button id="btnAnalizar" class="btn-principal">
-                    Analizar Marcadores
-                </button>
-            </div>
+        <nav class="app-nav">
+            <button id="nav-resumen" class="nav-button">
+                <i class="fas fa-chart-pie"></i> Resumen
+            </button>
+            <button id="nav-marcadores" class="nav-button active">
+                <i class="fas fa-bookmark"></i> Marcadores
+            </button>
+            <button id="nav-duplicados" class="nav-button">
+                <i class="fas fa-copy"></i> Duplicados
+            </button>
+        </nav>
 
-            <div id="cargando" class="cargando oculto">
-                <div class="spinner"></div>
-                <span>Analizando marcadores...</span>
-            </div>
+        <main class="app-content">
+            <!-- Sección de Resumen -->
+            <section id="seccion-resumen" class="content-section">
+                <div class="card">
+                    <canvas id="chart-distribucion"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <!-- Estadísticas se llenan dinámicamente -->
+                </div>
+            </section>
 
-            <div id="resultados" class="resultados oculto">
-                <!-- Los resultados se insertarán dinámicamente -->
-            </div>
+            <!-- Sección de Marcadores -->
+            <section id="seccion-marcadores" class="content-section active">
+                <div class="card">
+                    <h2>Lista de Marcadores</h2>
+                    <div class="table-container">
+                        <table class="tabla-marcadores" id="tabla-marcadores">
+                            <thead>
+                                <tr>
+                                    <th data-orden="index">#</th>
+                                    <th data-orden="id">ID</th>
+                                    <th data-orden="ruta">Ruta</th>
+                                    <th data-orden="marcador">Marcador</th>
+                                    <th data-orden="url">URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="paginacion">
+                        <select id="items-por-pagina" class="paginacion-select">
+                            <option value="10">10 por página</option>
+                            <option value="25">25 por página</option>
+                            <option value="50">50 por página</option>
+                        </select>
+                        <span id="info-pagina">Mostrando 0 - 0 de 0</span>
+                        <div>
+                            <button id="pagina-anterior" class="paginacion-boton" disabled>&lt; Anterior</button>
+                            <button id="pagina-siguiente" class="paginacion-boton" disabled>Siguiente &gt;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            <div id="error" class="error oculto">
-                <p class="mensaje-error"></p>
-                <button class="btn-reintentar">Reintentar</button>
-            </div>
+            <!-- Sección de Duplicados -->
+            <section id="seccion-duplicados" class="content-section">
+                <!-- Similar a la sección de marcadores pero con checkbox -->
+            </section>
         </main>
     </div>
 
-    <script type="module" src="popup.js"></script>
+    <!-- Scripts -->
+    <script src="../utils/logger.js"></script>
+    <script src="../utils/storage.js"></script>
+    <script src="../utils/url-validator.js"></script>
+    <script src="../utils/bookmark-manager.js"></script>
+    <script src="../config/constants.js"></script>
+    <script src="popup.js"></script>
 </body>
 </html>
 
