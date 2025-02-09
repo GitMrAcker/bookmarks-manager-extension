@@ -1,45 +1,46 @@
-// Import the chrome namespace.  This is necessary because the code uses chrome.runtime
-// without explicitly importing it.  The exact import method might vary slightly depending
-// on your build process and environment, but this is a common approach.
-const chrome = window.chrome
+// El objeto chrome está disponible globalmente en extensiones de Chrome
 
 console.log("Content script iniciado")
 
-// Función para verificar el estado de la extensión
-function checkExtensionStatus() {
+// Verificar disponibilidad y crear instancia
+if (typeof window.BookmarkManager !== "function") {
+  console.error("BookmarkManager no está disponible")
+  throw new Error("BookmarkManager no está disponible")
+}
+
+// Usar 'new' para crear la instancia
+const bookmarkManager = new window.BookmarkManager()
+
+// Función para verificar el estado
+function checkStatus() {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: "STATUS" }, (response) => {
-      const isActive = !chrome.runtime.lastError && response?.isActive
-      resolve(isActive)
+    chrome.runtime.sendMessage({ tipo: "STATUS" }, (response) => {
+      resolve(!chrome.runtime.lastError && response?.isActive)
     })
   })
 }
 
-// Función para obtener favoritos
-function getBookmarks() {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: "GET_BOOKMARKS" }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error("Error al obtener favoritos:", chrome.runtime.lastError)
-        resolve([])
-        return
-      }
-      resolve(response?.bookmarks || [])
-    })
-  })
+// Función para obtener marcadores
+async function getBookmarks() {
+  try {
+    return await bookmarkManager.getBookmarks()
+  } catch (error) {
+    console.error("Error al obtener marcadores:", error)
+    return []
+  }
 }
 
-// Manejar mensajes de la página web
+// Escuchar mensajes
 window.addEventListener("message", async (event) => {
-  // Verificar origen del mensaje
+  // Verificar origen
   if (event.origin !== window.location.origin) return
 
-  switch (event.data.type) {
+  switch (event.data.tipo) {
     case "CHECK_AVAILABILITY":
-      const isActive = await checkExtensionStatus()
+      const isActive = await checkStatus()
       window.postMessage(
         {
-          type: isActive ? "EXTENSION_READY" : "EXTENSION_UNAVAILABLE",
+          tipo: isActive ? "EXTENSION_READY" : "EXTENSION_UNAVAILABLE",
           isAvailable: isActive,
         },
         "*",
@@ -51,16 +52,16 @@ window.addEventListener("message", async (event) => {
         const bookmarks = await getBookmarks()
         window.postMessage(
           {
-            type: "BOOKMARKS_RESPONSE",
+            tipo: "BOOKMARKS_RESPONSE",
             bookmarks: bookmarks,
           },
           "*",
         )
       } catch (error) {
-        console.error("Error al procesar solicitud de favoritos:", error)
+        console.error("Error:", error)
         window.postMessage(
           {
-            type: "BOOKMARKS_ERROR",
+            tipo: "BOOKMARKS_ERROR",
             error: error.message,
           },
           "*",
@@ -69,13 +70,4 @@ window.addEventListener("message", async (event) => {
       break
   }
 })
-
-// Notificar que el content script está listo
-window.postMessage(
-  {
-    type: "EXTENSION_READY",
-    isAvailable: true,
-  },
-  "*",
-)
 
