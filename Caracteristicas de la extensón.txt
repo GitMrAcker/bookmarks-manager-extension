@@ -7,3 +7,16 @@
  - Redimensionamiento de columnas
  - Aspecto (look and feel): (titulos, tamaño de filas, etc). 
  Hagamos funciones reutilizables en la medida de lo posible.
+
+Prompt
+Estoy desarrollando una extensión de Chrome para gestionar marcadores. Ya he implementado las funcionalidades básicas como el resumen de estadísticas, sistema de navegación, tablas interactivas y la pestaña principal de marcadores. Ahora estoy trabajando en la funcionalidad de duplicados.
+Necesito ayuda para:
+1. Diseñar e implementar la interfaz de usuario para la pestaña de duplicados, que debe mostrar los marcadores duplicados de manera clara y permitir al usuario seleccionar cuáles mantener y cuáles eliminar.
+2. Desarrollar la lógica para identificar y manejar los marcadores duplicados, incluyendo:
+   - Comparación eficiente de URLs
+   - Manejo de casos especiales (por ejemplo, URLs con y sin "www")
+   - Agrupación de duplicados
+3. Implementar la funcionalidad para aplicar los cambios seleccionados por el usuario (eliminar los duplicados no deseados) de manera segura, utilizando la API de Chrome para marcadores.
+4. Integrar esta nueva funcionalidad con el sistema existente de gestión de cambios y la interfaz de usuario principal.
+5. Optimizar el rendimiento para manejar grandes cantidades de marcadores.
+Por favor, ayúdame a comenzar con el diseño y la implementación de esta funcionalidad de duplicados, proporcionando ejemplos de código y explicaciones detalladas cuando sea necesario.

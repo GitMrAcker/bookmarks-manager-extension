@@ -1,137 +1,167 @@
-// Remove chrome import - it's globally available in extension context
+import { browser } from "./utils.js"
+
 export class BookmarkOperations {
   constructor() {
-    // The chrome variable is globally available in the extension context. No need for import or declaration.
-    if (!chrome?.bookmarks) {
-      throw new Error("Chrome bookmarks API no disponible")
-    }
     this.changes = []
     this.pendingChanges = false
   }
 
-  // Registra un cambio pendiente
   addChange(type, data) {
-    this.changes.push({ type, data, timestamp: Date.now() })
+    this.changes.push({ type, data })
     this.pendingChanges = true
   }
 
-  // Limpia los cambios pendientes
-  clearChanges() {
-    this.changes = []
-    this.pendingChanges = false
-  }
-
-  // Elimina marcadores duplicados
-  async removeDuplicates(duplicates) {
-    for (const { url, marcadores } of duplicates) {
-      // Mantener el primer marcador y registrar los demás para eliminar
-      const [keep, ...remove] = marcadores
-      for (const bookmark of remove) {
-        this.addChange("remove", { id: bookmark.id, url: bookmark.url })
-      }
+  async bookmarkExists(id) {
+    try {
+      const result = await browser.bookmarks.get(id)
+      return result && result.length > 0
+    } catch (error) {
+      return false
     }
   }
 
-  // Unifica carpetas y sus marcadores
-  async unifyFolders(sourceId, targetId) {
+  async removeBookmark(id) {
     try {
-      const sourceFolder = await this.getFolder(sourceId)
-      const targetFolder = await this.getFolder(targetId)
-
-      // Registrar movimiento de marcadores
-      for (const bookmark of sourceFolder.children || []) {
-        this.addChange("move", {
-          id: bookmark.id,
-          parentId: targetId,
-          index: (targetFolder.children || []).length,
-        })
-      }
-
-      // Registrar eliminación de carpeta fuente
-      this.addChange("removeFolder", { id: sourceId })
+      await browser.bookmarks.remove(id)
     } catch (error) {
-      console.error("Error al unificar carpetas:", error)
+      if (error.message.includes("Can't find bookmark")) {
+        // Si el marcador ya no existe, considerarlo como éxito
+        return
+      }
       throw error
     }
   }
 
-  // Obtiene una carpeta y sus contenidos
-  async getFolder(folderId) {
-    return new Promise((resolve, reject) => {
-      chrome.bookmarks.getSubTree(folderId, (results) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError)
-        } else {
-          resolve(results[0])
-        }
-      })
-    })
-  }
-
-  // Aplica los cambios pendientes
-  async applyChanges() {
-    if (!this.pendingChanges) {
-      return { success: true, message: "No hay cambios pendientes" }
-    }
-
-    try {
-      for (const change of this.changes) {
-        switch (change.type) {
-          case "remove":
-            await this.removeBookmark(change.data.id)
-            break
-          case "move":
-            await this.moveBookmark(change.data.id, change.data.parentId, change.data.index)
-            break
-          case "removeFolder":
-            await this.removeFolder(change.data.id)
-            break
-        }
-      }
-
-      this.clearChanges()
-      return { success: true, message: "Cambios aplicados correctamente" }
-    } catch (error) {
-      console.error("Error al aplicar cambios:", error)
-      return { success: false, message: error.message }
-    }
-  }
-
-  // Métodos auxiliares para operaciones individuales
-  async removeBookmark(id) {
-    return new Promise((resolve, reject) => {
-      chrome.bookmarks.remove(id, () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError)
-        } else {
-          resolve()
-        }
-      })
-    })
-  }
-
   async moveBookmark(id, parentId, index) {
-    return new Promise((resolve, reject) => {
-      chrome.bookmarks.move(id, { parentId, index }, () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError)
-        } else {
-          resolve()
-        }
-      })
-    })
+    await browser.bookmarks.move(id, { parentId, index })
   }
 
   async removeFolder(id) {
-    return new Promise((resolve, reject) => {
-      chrome.bookmarks.removeTree(id, () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError)
+    await browser.bookmarks.removeTree(id)
+  }
+
+  async removeDuplicates() {
+    const checkboxes = document.querySelectorAll('#duplicates-table input[type="checkbox"]')
+    const keepIds = new Set()
+    const removeIds = new Set()
+    const groups = new Map()
+
+    // Primero, agrupar por URL y determinar qué marcadores mantener
+    checkboxes.forEach((checkbox) => {
+      const id = checkbox.dataset.id
+      const group = checkbox.dataset.group
+
+      if (!groups.has(group)) {
+        groups.set(group, { keep: null, remove: new Set() })
+      }
+
+      if (checkbox.checked) {
+        if (groups.get(group).keep === null) {
+          groups.get(group).keep = id
+          keepIds.add(id)
         } else {
-          resolve()
+          groups.get(group).remove.add(id)
+          removeIds.add(id)
         }
-      })
+      } else {
+        groups.get(group).remove.add(id)
+        removeIds.add(id)
+      }
     })
+
+    // Verificar que al menos un marcador se mantenga por grupo
+    groups.forEach((group, url) => {
+      if (group.keep === null && group.remove.size > 0) {
+        // Si ninguno está seleccionado, mantener el primero
+        const firstId = group.remove.values().next().value
+        group.remove.delete(firstId)
+        group.keep = firstId
+        keepIds.add(firstId)
+        removeIds.delete(firstId)
+      }
+    })
+
+    // Agregar operaciones de eliminación
+    removeIds.forEach((id) => {
+      this.addChange("remove", { id })
+    })
+  }
+
+  async applyChanges() {
+    if (!this.pendingChanges || this.changes.length === 0) {
+      return { success: true, message: "No hay cambios pendientes" }
+    }
+
+    const errors = []
+    const successfulChanges = []
+    let anySuccess = false
+
+    try {
+      for (const change of this.changes) {
+        try {
+          const exists = await this.bookmarkExists(change.data.id)
+
+          if (!exists && change.type === "remove") {
+            successfulChanges.push(change)
+            anySuccess = true
+            continue
+          }
+
+          switch (change.type) {
+            case "remove":
+              await this.removeBookmark(change.data.id)
+              successfulChanges.push(change)
+              anySuccess = true
+              break
+            case "move":
+              if (exists) {
+                await this.moveBookmark(change.data.id, change.data.parentId, change.data.index)
+                successfulChanges.push(change)
+                anySuccess = true
+              }
+              break
+            case "removeFolder":
+              if (exists) {
+                await this.removeFolder(change.data.id)
+                successfulChanges.push(change)
+                anySuccess = true
+              }
+              break
+          }
+        } catch (error) {
+          if (change.type === "remove" && error.message.includes("Can't find bookmark")) {
+            successfulChanges.push(change)
+            anySuccess = true
+          } else {
+            errors.push(`Error en operación ${change.type}: ${error.message}`)
+          }
+        }
+      }
+
+      this.changes = this.changes.filter((change) => !successfulChanges.includes(change))
+      this.pendingChanges = this.changes.length > 0
+
+      if (anySuccess) {
+        return {
+          success: true,
+          message:
+            errors.length > 0
+              ? `Cambios aplicados correctamente con algunas advertencias: ${errors.join("; ")}`
+              : "Cambios aplicados correctamente",
+        }
+      }
+
+      return {
+        success: false,
+        message: `No se pudieron aplicar los cambios: ${errors.join("; ")}`,
+      }
+    } catch (error) {
+      console.error("Error al aplicar cambios:", error)
+      return {
+        success: false,
+        message: `Error al aplicar cambios: ${error.message}`,
+      }
+    }
   }
 }
 

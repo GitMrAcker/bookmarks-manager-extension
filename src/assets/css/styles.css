@@ -124,6 +124,16 @@ body {
   cursor: not-allowed;
 }
 
+/* Estilos para la pestaña sin duplicados */
+.nav-button.no-duplicates {
+  background-color: #4caf50;
+  color: white;
+}
+
+.nav-button.no-duplicates:hover {
+  background-color: #45a049;
+}
+
 /* Content sections */
 .content-section {
   display: none;
@@ -313,5 +323,188 @@ tr:hover {
   .nav-button {
     flex: 1 1 100%;
   }
+}
+
+/* Estilos para la tabla de duplicados */
+#duplicates-table tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Estilo para el primer elemento de cada grupo */
+#duplicates-table tr[data-first-in-group="true"] {
+  border-top: 2px solid #2c3e50;
+}
+
+/* Ajustar el ancho de la columna de checkbox */
+.column-actions {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
+/* Estilo para los checkboxes */
+.duplicate-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Estilo para el número de grupo */
+.column-number {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* Mensaje de éxito */
+.section-message {
+  text-align: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  border-radius: 8px;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.section-message.success {
+  background-color: #f1f8f1;
+  border: 1px solid #4caf50;
+  border-radius: 8px;
+  color: #2e7d32;
+  padding: 20px;
+  margin: 40px auto;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-message p {
+  margin: 0.5rem 0;
+}
+
+.section-message p:first-child {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.modal-actions button {
+  margin-left: 10px;
+}
+
+/* Loader */
+.loader {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.loader-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2c3e50;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-message {
+  margin-top: 10px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Mejoras de accesibilidad */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Estados de foco mejorados */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
+}
+
+/* Mejoras de interactividad */
+.action-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 

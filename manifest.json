@@ -21,7 +21,7 @@
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'"
+    "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'"
   },
   "web_accessible_resources": [
     {
@@ -30,8 +30,7 @@
         "src/pages/*.js",
         "src/components/*.js",
         "src/assets/css/*",
-        "src/assets/fonts/*",
-        "src/background/*.js"
+        "src/assets/fonts/*"
       ],
       "matches": ["<all_urls>"]
     }

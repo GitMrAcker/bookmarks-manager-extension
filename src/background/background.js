@@ -1,107 +1,69 @@
-import { chrome } from "../utils/core.js"
+import { browser, logger } from "../utils/utils.js"
 
-// Service Worker para la extensión de gestión de marcadores
-
-// Configuración de debug
-const DEBUG = true
-
-// Configuración inline para evitar importaciones
-const CONFIG = {
-  TIPOS_MENSAJE: {
-    ANALIZAR: "ANALIZAR_MARCADORES",
-    RESULTADO: "RESULTADO_ANALISIS",
-    ERROR: "ERROR_ANALISIS",
-    STATUS: "STATUS",
-    OBTENER_MARCADORES: "OBTENER_MARCADORES",
-    GET_BOOKMARKS: "GET_BOOKMARKS",
-  },
-}
-
-const ERRORES = {
-  ANALISIS: "Error durante el análisis de marcadores",
-}
-
-// Funciones de utilidad para logging
-function log(...args) {
-  if (DEBUG) {
-    console.log("[Background]", ...args)
-  }
-}
-
-function error(...args) {
-  if (DEBUG) {
-    console.error("[Background]", ...args)
-  }
-}
-
-// Event Listeners
-chrome.runtime.onMessage.addListener((mensaje, sender, sendResponse) => {
-  log("Mensaje recibido:", mensaje)
-  log("Sender:", sender)
-
-  switch (mensaje.tipo) {
-    case CONFIG.TIPOS_MENSAJE.ANALIZAR:
-      log("Iniciando análisis de marcadores...")
-      analizarMarcadores()
-        .then((resultado) => {
-          log("Análisis completado exitosamente:", resultado)
-          sendResponse({ exito: true, datos: resultado })
-        })
-        .catch((err) => {
-          error("Error durante el análisis:", err)
-          sendResponse({ exito: false, error: err.message })
-        })
-      return true
-
-    case CONFIG.TIPOS_MENSAJE.OBTENER_MARCADORES:
-      log("Obteniendo marcadores...")
-      chrome.bookmarks.getTree((bookmarkTreeNodes) => {
-        sendResponse({ exito: true, datos: bookmarkTreeNodes })
-      })
-      return true
-
-    case CONFIG.TIPOS_MENSAJE.STATUS:
-      sendResponse({ isActive: true })
-      return true
-
-    default:
-      error("Tipo de mensaje no reconocido:", mensaje.tipo)
-      sendResponse({ exito: false, error: "Tipo de mensaje no soportado" })
-      return false
+// Manejar el clic en el ícono de la extensión
+browser.action.onClicked.addListener(async (tab) => {
+  try {
+    const url = browser.runtime.getURL("src/pages/manager.html")
+    await browser.tabs.create({ url })
+    logger.log("Nueva pestaña creada con el gestor de marcadores")
+  } catch (error) {
+    logger.error("Error al abrir el gestor de marcadores:", error)
   }
 })
 
-// Manejo de instalación
-chrome.runtime.onInstalled.addListener(({ reason }) => {
-  log("Extensión instalada/actualizada:", reason)
-})
+// Event Listeners para mensajes
+browser.runtime.onMessage.addListener((mensaje, sender, sendResponse) => {
+  logger.log("Mensaje recibido:", mensaje)
+  logger.log("Sender:", sender)
 
-// Configuración para abrir la extensión en una nueva pestaña
-chrome.action.onClicked.addListener((tab) => {
-  const managerURL = chrome.runtime.getURL("src/pages/manager.html")
-  chrome.tabs.create({
-    url: managerURL,
-  })
-})
+  // Manejar mensajes de manera asíncrona
+  const handleMessage = async () => {
+    try {
+      switch (mensaje.tipo) {
+        case "ANALIZAR_MARCADORES":
+          logger.log("Iniciando análisis de marcadores...")
+          const resultado = await analizarMarcadores()
+          logger.log("Análisis completado exitosamente:", resultado)
+          return { exito: true, datos: resultado }
 
-// Log inicial para confirmar que el script se ha cargado
-log("Service Worker cargado correctamente")
+        case "OBTENER_MARCADORES":
+          logger.log("Obteniendo marcadores...")
+          const bookmarkTreeNodes = await browser.bookmarks.getTree()
+          return { exito: true, datos: bookmarkTreeNodes }
+
+        case "STATUS":
+          return { isActive: true }
+
+        default:
+          logger.error("Tipo de mensaje no reconocido:", mensaje.tipo)
+          return { exito: false, error: "Tipo de mensaje no soportado" }
+      }
+    } catch (err) {
+      logger.error("Error durante el procesamiento:", err)
+      return { exito: false, error: err.message }
+    }
+  }
+
+  // Manejar la respuesta de manera asíncrona
+  handleMessage().then(sendResponse)
+  return true
+})
 
 // Funciones principales
 async function analizarMarcadores() {
   try {
-    log("Obteniendo árbol de marcadores...")
-    const marcadores = await new Promise((resolve) => chrome.bookmarks.getTree(resolve))
-    log("Árbol de marcadores obtenido:", marcadores)
+    logger.log("Obteniendo árbol de marcadores...")
+    const marcadores = await browser.bookmarks.getTree()
+    logger.log("Árbol de marcadores obtenido:", marcadores)
 
-    log("Procesando marcadores...")
+    logger.log("Procesando marcadores...")
     const resultados = await procesarMarcadores(marcadores)
-    log("Procesamiento completado:", resultados)
+    logger.log("Procesamiento completado:", resultados)
 
     return resultados
   } catch (err) {
-    error("Error en analizarMarcadores:", err)
-    throw new Error(ERRORES.ANALISIS)
+    logger.error("Error en analizarMarcadores:", err)
+    throw new Error("Error durante el análisis de marcadores")
   }
 }
 
@@ -113,11 +75,10 @@ async function procesarMarcadores(nodos) {
   async function recorrer(nodo) {
     if (nodo.url) {
       total++
-      log("Procesando marcador:", { titulo: nodo.title, url: nodo.url })
+      logger.log("Procesando marcador:", { titulo: nodo.title, url: nodo.url })
 
-      // Verificar duplicados
       if (urls.has(nodo.url)) {
-        log("URL duplicada encontrada:", nodo.url)
+        logger.log("URL duplicada encontrada:", nodo.url)
         duplicados.add(nodo.url)
       } else {
         urls.add(nodo.url)
@@ -131,11 +92,11 @@ async function procesarMarcadores(nodos) {
     }
   }
 
-  log("Iniciando recorrido de nodos...")
+  logger.log("Iniciando recorrido de nodos...")
   for (const nodo of nodos) {
     await recorrer(nodo)
   }
-  log("Recorrido completado")
+  logger.log("Recorrido completado")
 
   return {
     total,
@@ -143,4 +104,7 @@ async function procesarMarcadores(nodos) {
     unicos: total - duplicados.size,
   }
 }
+
+// Log inicial para confirmar que el script se ha cargado
+logger.log("Service Worker cargado correctamente")
 

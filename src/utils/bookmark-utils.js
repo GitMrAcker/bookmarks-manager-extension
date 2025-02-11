@@ -1,4 +1,4 @@
-import { chrome, logger } from "./core.js"
+import { browser, logger } from "./utils.js"
 
 // Link Checker functionality
 export class LinkChecker {
@@ -82,34 +82,34 @@ export class BookmarkManager {
       marcadoresDuplicados: 0,
       enlacesRotosEliminados: 0,
     }
+    this.initialized = false
 
-    if (!chrome?.bookmarks) {
-      throw new Error("Chrome bookmarks API no está disponible")
+    if (!browser.bookmarks) {
+      throw new Error("Browser bookmarks API no disponible")
     }
 
-    // Bind methods
     this.actualizarEstadisticas = this.actualizarEstadisticas.bind(this)
     this.emitirCambioEstado = this.emitirCambioEstado.bind(this)
   }
 
   async getBookmarks() {
-    return new Promise((resolve, reject) => {
-      try {
-        chrome.bookmarks.getTree((bookmarkTreeNodes) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
+    try {
+      const bookmarkTreeNodes = await browser.bookmarks.getTree()
+      const newBookmarks = this.procesarMarcadores(bookmarkTreeNodes)
+      const hasChanges =
+        !this.initialized || JSON.stringify(newBookmarks) !== JSON.stringify(this.estado.bookmarkOriginal)
 
-          this.estado.bookmarkOriginal = this.procesarMarcadores(bookmarkTreeNodes)
-          this.estado.bookmarkProgress = [...this.estado.bookmarkOriginal]
-          this.actualizarEstadisticas()
-          resolve(this.estado.bookmarkOriginal)
-        })
-      } catch (error) {
-        reject(new Error("Error al acceder a la API de Chrome: " + error.message))
+      if (hasChanges) {
+        this.estado.bookmarkOriginal = newBookmarks
+        this.estado.bookmarkProgress = [...newBookmarks]
+        await this.actualizarEstadisticas()
       }
-    })
+
+      this.initialized = true
+      return this.estado.bookmarkOriginal
+    } catch (error) {
+      throw new Error("Error al acceder a la API de bookmarks: " + error.message)
+    }
   }
 
   procesarMarcadores(nodos, rutaActual = "") {
@@ -139,14 +139,38 @@ export class BookmarkManager {
     return marcadores
   }
 
-  actualizarEstadisticas() {
-    const urls = new Set(this.estado.bookmarkProgress.map((m) => m.url))
+  async actualizarEstadisticas() {
+    const urlMap = new Map()
 
-    this.estado.totalMarcadores = this.estado.bookmarkOriginal.length
-    this.estado.marcadoresUnicos = urls.size
-    this.estado.marcadoresDuplicados = this.estado.bookmarkProgress.length - urls.size
+    // Agrupar por URL normalizada
+    this.estado.bookmarkProgress.forEach((bookmark) => {
+      const normalizedUrl = this.normalizeUrl(bookmark.url)
+      if (!urlMap.has(normalizedUrl)) {
+        urlMap.set(normalizedUrl, [])
+      }
+      urlMap.get(normalizedUrl).push(bookmark)
+    })
 
+    // Calcular duplicados
+    let totalDuplicados = 0
+    urlMap.forEach((bookmarks) => {
+      if (bookmarks.length > 1) {
+        totalDuplicados += bookmarks.length - 1
+      }
+    })
+
+    // Actualizar estado
+    this.estado.totalMarcadores = this.estado.bookmarkProgress.length
+    this.estado.marcadoresDuplicados = totalDuplicados
+    this.estado.marcadoresUnicos = this.estado.totalMarcadores - totalDuplicados
+
+    // Forzar actualización inmediata
     this.emitirCambioEstado()
+
+    // Esperar a que el DOM se actualice
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    return this.estado
   }
 
   emitirCambioEstado() {
@@ -175,57 +199,79 @@ export class BookmarkManager {
     }
   }
 
+  normalizeUrl(url) {
+    try {
+      const urlObj = new URL(url)
+      // Normalizar la URL: convertir a minúsculas y eliminar barra final
+      let normalizedUrl = urlObj.toString().toLowerCase()
+      // Eliminar barra final si existe
+      if (normalizedUrl.endsWith("/")) {
+        normalizedUrl = normalizedUrl.slice(0, -1)
+      }
+      return normalizedUrl
+    } catch (error) {
+      console.error("Error al normalizar URL:", error)
+      return url.toLowerCase()
+    }
+  }
+
   getDuplicados() {
     const urlMap = new Map()
+
+    // Agrupar marcadores por URL normalizada
     this.estado.bookmarkProgress.forEach((bookmark) => {
-      if (!urlMap.has(bookmark.url)) {
-        urlMap.set(bookmark.url, [])
+      const normalizedUrl = this.normalizeUrl(bookmark.url)
+      if (!urlMap.has(normalizedUrl)) {
+        urlMap.set(normalizedUrl, [])
       }
-      urlMap.get(bookmark.url).push(bookmark)
+      urlMap.get(normalizedUrl).push(bookmark)
     })
 
-    return Array.from(urlMap.entries())
-      .filter(([_, bookmarks]) => bookmarks.length > 1)
-      .map(([url, bookmarks]) => ({
-        url,
-        count: bookmarks.length,
-        marcadores: bookmarks,
-      }))
+    // Convertir el Map a un array de marcadores individuales con información de grupo
+    const duplicatesArray = []
+    urlMap.forEach((bookmarks, normalizedUrl) => {
+      if (bookmarks.length > 1) {
+        // Solo procesar grupos con duplicados
+        bookmarks.forEach((bookmark, index) => {
+          duplicatesArray.push({
+            ...bookmark,
+            groupUrl: normalizedUrl,
+            groupSize: bookmarks.length,
+            isFirstInGroup: index === 0,
+          })
+        })
+      }
+    })
+
+    // Ordenar por URL normalizada para mantener los grupos juntos
+    return duplicatesArray.sort((a, b) => a.groupUrl.localeCompare(b.groupUrl))
   }
 
   async getFolders() {
-    return new Promise((resolve, reject) => {
-      try {
-        chrome.bookmarks.getTree((bookmarkTreeNodes) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError)
-            return
-          }
+    try {
+      const bookmarkTreeNodes = await browser.bookmarks.getTree()
+      const folders = []
 
-          const folders = []
-
-          const processFolders = (nodes, path = "") => {
-            nodes.forEach((node) => {
-              if (node.children) {
-                const currentPath = path ? `${path} / ${node.title}` : node.title
-                folders.push({
-                  id: node.id,
-                  title: node.title,
-                  path: currentPath,
-                  items: node.children.length,
-                })
-                processFolders(node.children, currentPath)
-              }
+      const processFolders = (nodes, path = "") => {
+        nodes.forEach((node) => {
+          if (node.children) {
+            const currentPath = path ? `${path} / ${node.title}` : node.title
+            folders.push({
+              id: node.id,
+              title: node.title,
+              path: currentPath,
+              items: node.children.length,
             })
+            processFolders(node.children, currentPath)
           }
-
-          processFolders(bookmarkTreeNodes)
-          resolve(folders)
         })
-      } catch (error) {
-        reject(new Error("Error al acceder a la API de Chrome: " + error.message))
       }
-    })
+
+      processFolders(bookmarkTreeNodes)
+      return folders
+    } catch (error) {
+      throw new Error("Error al acceder a la API de bookmarks: " + error.message)
+    }
   }
 }
 

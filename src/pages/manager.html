@@ -4,91 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookmark Manager By MrAcker</title>
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="../assets/css/fontawesome.min.css">
+    <link rel="stylesheet" href="../assets/css/roboto.css">
 </head>
 <body>
-    <div id="app-root">
+    <div class="app-container">
         <header class="app-header">
             <h1>Gestor de Marcadores</h1>
-            <p class="app-description">
-                Gestiona y organiza tus marcadores de Chrome de manera eficiente
-            </p>
+            <p class="app-description">Analiza y gestiona tus marcadores de Chrome</p>
         </header>
 
-        <div class="app-container">
-            <!-- Estadísticas -->
-            <div class="stats-container">
-                <div class="stats-card">
-                    <h3>Total de Marcadores</h3>
-                    <p id="total-marcadores">0</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Marcadores Únicos</h3>
-                    <p id="total-marcadores-unicos">0</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Marcadores Duplicados</h3>
-                    <p id="total-marcadores-duplicados">0</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Enlaces Rotos Eliminados</h3>
-                    <p id="total-enlaces-rotos-eliminados">0</p>
-                </div>
+        <!-- Estadísticas -->
+        <div class="stats-container">
+            <div class="stats-card">
+                <h3>Total de Marcadores</h3>
+                <p id="total-marcadores">0</p>
             </div>
+            <div class="stats-card">
+                <h3>Marcadores Únicos</h3>
+                <p id="total-marcadores-unicos">0</p>
+            </div>
+            <div class="stats-card">
+                <h3>Marcadores Duplicados</h3>
+                <p id="total-marcadores-duplicados">0</p>
+            </div>
+            <div class="stats-card">
+                <h3>Enlaces Rotos Eliminados</h3>
+                <p id="total-enlaces-rotos-eliminados">0</p>
+            </div>
+        </div>
 
-
-            <!-- Navigation with Apply Changes button -->
-            <div class="nav-container">
-                <nav class="app-nav">
-                    <button id="nav-bookmarks" class="nav-button active" data-section="bookmarks-section">Marcadores</button>
-                    <button id="nav-duplicates" class="nav-button" data-section="duplicates-section">Duplicados</button>
-                    <button id="nav-folders" class="nav-button" data-section="folders-section">Carpetas</button>
-                    <button id="nav-broken-links" class="nav-button" data-section="broken-links-section">Enlaces Rotos</button>
-                </nav>
+        <!-- Navegación -->
+        <div class="nav-container">
+            <nav class="app-nav">
+                <button id="nav-bookmarks" class="nav-button active" data-section="bookmarks-section">Marcadores</button>
+                <button id="nav-duplicates" class="nav-button" data-section="duplicates-section">Duplicados</button>
+                <button id="nav-folders" class="nav-button" data-section="folders-section">Carpetas</button>
+                <button id="nav-broken-links" class="nav-button" data-section="broken-links-section">Enlaces Rotos</button>
+            </nav>
+            <div class="action-buttons">
                 <button id="apply-changes" class="nav-button action-button" disabled>Aplicar Cambios</button>
             </div>
+        </div>
 
-            <!-- Main Content -->
-            <main class="content-container">
-                <section id="bookmarks-section" class="content-section active">
-                    <h2>Marcadores</h2>
-                    <div id="bookmarks-table" class="table-container"></div>
-                </section>
+        <!-- Contenido -->
+        <div class="content-container">
+            <!-- Sección de Marcadores -->
+            <section id="bookmarks-section" class="content-section active">
+                <h2>Marcadores</h2>
+                <div id="bookmarks-table" class="table-container"></div>
+            </section>
 
-                <section id="duplicates-section" class="content-section">
-                    <h2>Duplicados</h2>
-                    <div class="section-description">
-                        Selecciona los marcadores duplicados que deseas eliminar.
-                        Los cambios no se aplicarán hasta que hagas clic en "Aplicar Cambios".
-                    </div>
-                    <div id="duplicates-table" class="table-container"></div>
-                </section>
+            <!-- Sección de Duplicados -->
+            <section id="duplicates-section" class="content-section">
+                <h2>Duplicados</h2>
+                <div id="duplicates-table" class="table-container"></div>
+            </section>
 
-                <section id="folders-section" class="content-section">
-                    <h2>Unificación de Carpetas</h2>
-                    <div class="section-description">
-                        Selecciona las carpetas que deseas unificar.
-                        Los cambios no se aplicarán hasta que hagas clic en "Aplicar Cambios".
-                    </div>
-                    <div id="folders-table" class="table-container"></div>
-                </section>
+            <!-- Sección de Carpetas -->
+            <section id="folders-section" class="content-section">
+                <h2>Carpetas</h2>
+                <div id="folders-table" class="table-container"></div>
+            </section>
 
-                <section id="broken-links-section" class="content-section">
-                    <h2>Enlaces Rotos</h2>
-                    <div class="section-description">
-                        Primero debes aplicar los cambios de duplicados y carpetas
-                        antes de verificar enlaces rotos.
-                    </div>
-                    <div class="section-actions">
-                        <button id="check-links" class="action-button" disabled>Verificar Enlaces</button>
-                    </div>
-                    <div id="broken-links-table" class="table-container"></div>
-                </section>
-            </main>
+            <!-- Sección de Enlaces Rotos -->
+            <section id="broken-links-section" class="content-section">
+                <h2>Enlaces Rotos</h2>
+                <div class="section-actions">
+                    <button id="check-links" class="nav-button action-button" disabled>Verificar Enlaces</button>
+                </div>
+                <div id="broken-links-table" class="table-container"></div>
+            </section>
         </div>
     </div>
 
-    <!-- Single external script -->
-    <script type="module" src="init.js"></script>
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title"></h2>
+            <p id="modal-message"></p>
+            <div class="modal-actions">
+                <button id="modal-cancel">Cancelar</button>
+                <button id="modal-confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loader">
+        <div class="loader-spinner"></div>
+        <div id="loader-message">Procesando...</div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="./init-manager.js"></script>
 </body>
 </html>
 
