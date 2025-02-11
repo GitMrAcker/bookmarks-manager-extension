@@ -1,3 +1,5 @@
+import { chrome } from "../utils/core.js"
+
 // Service Worker para la extensión de gestión de marcadores
 
 // Configuración de debug
@@ -32,11 +34,64 @@ function error(...args) {
   }
 }
 
+// Event Listeners
+chrome.runtime.onMessage.addListener((mensaje, sender, sendResponse) => {
+  log("Mensaje recibido:", mensaje)
+  log("Sender:", sender)
+
+  switch (mensaje.tipo) {
+    case CONFIG.TIPOS_MENSAJE.ANALIZAR:
+      log("Iniciando análisis de marcadores...")
+      analizarMarcadores()
+        .then((resultado) => {
+          log("Análisis completado exitosamente:", resultado)
+          sendResponse({ exito: true, datos: resultado })
+        })
+        .catch((err) => {
+          error("Error durante el análisis:", err)
+          sendResponse({ exito: false, error: err.message })
+        })
+      return true
+
+    case CONFIG.TIPOS_MENSAJE.OBTENER_MARCADORES:
+      log("Obteniendo marcadores...")
+      chrome.bookmarks.getTree((bookmarkTreeNodes) => {
+        sendResponse({ exito: true, datos: bookmarkTreeNodes })
+      })
+      return true
+
+    case CONFIG.TIPOS_MENSAJE.STATUS:
+      sendResponse({ isActive: true })
+      return true
+
+    default:
+      error("Tipo de mensaje no reconocido:", mensaje.tipo)
+      sendResponse({ exito: false, error: "Tipo de mensaje no soportado" })
+      return false
+  }
+})
+
+// Manejo de instalación
+chrome.runtime.onInstalled.addListener(({ reason }) => {
+  log("Extensión instalada/actualizada:", reason)
+})
+
+// Configuración para abrir la extensión en una nueva pestaña
+chrome.action.onClicked.addListener((tab) => {
+  const managerURL = chrome.runtime.getURL("src/pages/manager.html")
+  chrome.tabs.create({
+    url: managerURL,
+  })
+})
+
+// Log inicial para confirmar que el script se ha cargado
+log("Service Worker cargado correctamente")
+
 // Funciones principales
 async function analizarMarcadores() {
   try {
     log("Obteniendo árbol de marcadores...")
-    const marcadores = await chrome.bookmarks.getTree()
+    const marcadores = await new Promise((resolve) => chrome.bookmarks.getTree(resolve))
     log("Árbol de marcadores obtenido:", marcadores)
 
     log("Procesando marcadores...")
@@ -85,58 +140,7 @@ async function procesarMarcadores(nodos) {
   return {
     total,
     duplicados: duplicados.size,
+    unicos: total - duplicados.size,
   }
 }
-
-// Event Listeners
-chrome.runtime.onMessage.addListener((mensaje, sender, sendResponse) => {
-  log("Mensaje recibido:", mensaje)
-  log("Sender:", sender)
-
-  switch (mensaje.tipo) {
-    case CONFIG.TIPOS_MENSAJE.ANALIZAR:
-      log("Iniciando análisis de marcadores...")
-      analizarMarcadores()
-        .then((resultado) => {
-          log("Análisis completado exitosamente:", resultado)
-          sendResponse({ exito: true, datos: resultado })
-        })
-        .catch((err) => {
-          error("Error durante el análisis:", err)
-          sendResponse({ exito: false, error: err.message })
-        })
-      return true
-
-    case CONFIG.TIPOS_MENSAJE.OBTENER_MARCADORES:
-      log("Obteniendo marcadores...")
-      chrome.bookmarks.getTree((bookmarkTreeNodes) => {
-        sendResponse({ exito: true, datos: bookmarkTreeNodes })
-      })
-      return true
-
-    case CONFIG.TIPOS_MENSAJE.STATUS:
-      sendResponse({ isActive: true })
-      return true
-
-    default:
-      error("Tipo de mensaje no reconocido:", mensaje.tipo)
-      sendResponse({ exito: false, error: "Tipo de mensaje no soportado" })
-      return false
-  }
-})
-
-// Manejo de instalación
-chrome.runtime.onInstalled.addListener(({ reason }) => {
-  log("Extensión instalada/actualizada:", reason)
-})
-
-// Configuración para abrir la extensión en una nueva pestaña
-chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.create({
-    url: chrome.runtime.getURL("src/popup/popup.html"),
-  })
-})
-
-// Log inicial para confirmar que el script se ha cargado
-log("Service Worker cargado correctamente")
 

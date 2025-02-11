@@ -35,7 +35,10 @@ const ERRORES = {
   ANALISIS: "Error durante el análisis de marcadores",
 }
 
-// Hacer disponible globalmente
+// Make constants available globally for non-module scripts
 window.CONFIG = CONFIG
 window.ERRORES = ERRORES
+
+// Also export for module usage
+export { CONFIG, ERRORES }
 

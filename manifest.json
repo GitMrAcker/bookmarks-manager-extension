@@ -21,25 +21,19 @@
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'"
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/assets/js/*", "src/assets/css/*", "src/assets/webfonts/*", "src/assets/fonts/*"],
+      "resources": [
+        "src/utils/*.js",
+        "src/pages/*.js",
+        "src/components/*.js",
+        "src/assets/css/*",
+        "src/assets/fonts/*",
+        "src/background/*.js"
+      ],
       "matches": ["<all_urls>"]
-    }
-  ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": [
-        "src/config/constants.js",
-        "src/utils/logger.js",
-        "src/utils/storage.js",
-        "src/utils/url-validator.js",
-        "src/utils/bookmark-manager.js",
-        "extension/content.js"
-      ]
     }
   ]
 }

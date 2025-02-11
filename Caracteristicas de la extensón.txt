@@ -1,0 +1,9 @@
+ Tablas
+ Todas las tablas tienen los mismos comportamientos: 
+ - Paginado (10, 25 ,100 , Todos)
+ - Anterior, siguiente
+ - Información de pagina
+ - Ordenamiento [a-z][-za]
+ - Redimensionamiento de columnas
+ - Aspecto (look and feel): (titulos, tamaño de filas, etc). 
+ Hagamos funciones reutilizables en la medida de lo posible.

@@ -48,3 +48,4 @@ Para usar esta estructura:
 4. Desarrolla nuevas características
 5. Ejecuta las pruebas
 6. Crea pull requests
+
